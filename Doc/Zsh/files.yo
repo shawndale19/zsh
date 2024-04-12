@@ -64,6 +64,12 @@ see zmanref(zshbuiltins)\
 )\
 ifnzman(\
 noderef(Shell Builtin Commands)\
+command (
+ifzman(\
+see zmanref(zshbuiltins)
+)\
+ifnzman(\
+noderef(Shell Builtin Commands)
 )\
 ).  If a compiled file exists (named for the original file plus the
 tt(.zwc) extension) and it is newer than the original file, the compiled

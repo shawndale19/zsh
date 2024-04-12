@@ -88,6 +88,7 @@ and no restoring is done.
 If var(file) was not found the return status is 127; if var(file) was found
 but contained a syntax error the return status is 126; else the return
 status is the exit status of the last command executed.
+The exit status is the exit status of the last command executed.
 )
 findex(NOTRANS(:))
 cindex(expanding parameters)
@@ -2634,6 +2635,18 @@ output file has the name `var(file)tt(.zwc)' and will be placed in
 the same directory as the var(file).  The shell will load the compiled
 file instead of the normal function file when the function
 is autoloaded; see
+This builtin command can be used to compile functions or scripts and
+store the compiled form in a file, and to examine files containing
+the compiled form.  This allows faster autoloading of functions and
+execution of scripts by avoiding parsing of the text when the files
+are read.
+
+The first form (without the tt(-c) or tt(-t) options) creates a
+compiled file.  If only the var(file) argument is provided, the
+output file has the name `var(file)tt(.zwc)' and will be placed in
+the same directory as the var(file).  This will make the compiled
+file be loaded instead of the normal function file when the function
+is autoloaded (see
 ifzman(\
 the section `Autoloading Functions' in zmanref(zshmisc)
 )\
@@ -2700,12 +2713,78 @@ With arguments, nothing is output and the return status is set to zero if
 definitions for em(all) var(name)s were found in the compiled
 file, and non-zero if the definition for at least one var(name) was not
 found.
+for a description of how autoloaded functions are searched).  The
+extension tt(.zwc) stands for `zsh word codes'.
+
+If there is at least one var(name) argument, all those named files
+are compiled into one output var(file).  If var(file) does not end
+in tt(.zwc), this extension is automatically appended.  Files
+containing multiple compiled functions are called `digest' files,
+and are intended to be used as elements of the tt(FPATH)/tt(fpath)
+special array.
+
+The second form, with the tt(-c) option, writes the definitions for
+all the named functions into var(file).  The names must be functions
+currently defined in the shell or marked for autoloading.  If the
+tt(-M) option is given, too, the var(name)s are used as patterns and
+all functions whose names match one of these patterns will be
+written. If no var(name) is given, the definitions of all functions
+currently defined or marked as autoloaded will be written.
+
+The third form, with the tt(-t) option, examines an existing
+compiled file.  Without further arguments, the names of the original
+files compiled into it are listed.  The first line of output tells
+the version of the shell which compiled the file and how the file
+will be used (mapping or reading the file).  With arguments, nothing
+is output and the return value is set to zero if em(all) var(name)s
+name files contained in the wordcode file, and non-zero if at least
+one var(name) is not contained in it.
 
 Other options:
 
 startitem()
 item(tt(-U))(
 Aliases are not expanded when compiling the var(name)d files.
+)
+item(tt(-r))(
+When the compiled file is read, its contents are copied into the
+shell's memory, rather than memory-mapped (see tt(-m)).  This
+happens automatically on systems that do not support memory mapping.
+
+When compiling scripts instead of autoloadable functions, it is
+often desirable to use this option. Otherwise the whole file will
+remain mapped if the script has defined one or more functions, even
+if the rest of the file will not be used again.
+)
+item(tt(-m))(
+The compiled file is mapped into the shell's memory when read. This
+is done in such a way that multiple instances of the shell running
+on the same host will share this mapped file.  If neither tt(-r) nor
+tt(-m) is given, the tt(zcompile) builtin decides what to do based
+on the size of the compiled file.
+)
+xitem(tt(-k))
+item(tt(-z))(
+These options are used when the compiled file contains functions and
+those functions are to be autoloaded. If tt(-z) is given, the
+function will be autoloaded as if the tt(KSHAUTOLOAD) option is
+em(not) set, even if it is set at the time the compiled file is
+read. The tt(-k) makes the function be loaded as if tt(KASHAUTOLOAD)
+em(is) set.  If neither of these options is given, the function will
+be loaded as determined by the setting of the tt(KSHAUTOLOAD) option
+at the time the compiled file is read.
+
+These options may also be repeated among the listed var(name)s to
+specify the loading style of all following functions, up to the next
+tt(-k) or tt(-z).
+)
+enditem()
+
+The created file always contains two versions of the compiled
+format, one for big-endian machines and one for small-endian
+machines. The upshot of this is that the compiled file is machine
+independent and if it is read or mapped, only one half of the file
+is actually used (and mapped).
 )
 item(tt(-R))(
 When the compiled file is read, its contents are copied into the

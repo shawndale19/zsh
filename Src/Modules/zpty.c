@@ -250,6 +250,7 @@ get_pty(int master, int *retfd)
 }
 
 #else /* No /dev/ptmx or no pt functions */
+#else /* ! (defined(__SVR4) || defined(sinix)) */
 
 static int
 get_pty(int master, int *retfd)

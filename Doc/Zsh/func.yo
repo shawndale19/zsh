@@ -113,6 +113,31 @@ A file created with tt(zcompile), which is expected to contain the
 definition for var(function).  It may include other function definitions
 as well, but those are neither loaded nor executed; a file found in this
 way is searched em(only) for the definition of var(function).
+tt(autoload) builtin or its equivalent is given the option tt(-U).  For
+functions precompiled with the tt(zcompile) builtin command, this has to
+be decided when creating the file; this is recommended for the use of
+functions supplied with the zsh distribution.
+
+For each var(element) in tt(fpath), the shell looks for three files, the
+newest of which is used to load the definition for the function:
+
+startitem()
+item(var(element)tt(.zwc))(
+A file created with the tt(zcompile) builtin command, expected to
+contain the definitions for all functions in the directory named
+var(element).  The file is treated like a directory containing files for
+functions and is searched for the definition of the function; the search
+goes on to the next two files if the definition is not found.
+
+If var(element) already includes a tt(.zwc) extension, var(element) is
+searched for the definition of the function without comparing its age to
+that of other files.
+)
+item(var(element)tt(/)var(function)tt(.zwc))(
+A file created with tt(zcompile), expected to contain the definition for
+var(function).  It may include other function definitions as well, but
+those are neither loaded nor executed; a file found in this way is
+searched em(only) for the definition of var(function).
 )
 item(var(element)tt(/)var(function))(
 A file of zsh command text, taken to be the definition for var(function).
@@ -144,6 +169,18 @@ initialization code (which will be executed then discarded) in addition to
 a complete function definition (which will be retained for subsequent calls
 to the function), and a call to the shell function, including any
 arguments, at the end.
+initialization; such initialization is executed in the context of the
+function execution, and may therefore define local parameters.  It is an
+error if the function is not defined by loading the file.
+
+Otherwise, the function is defined such that its body is the complete
+contents of the file.  This form allows the file to be used directly as
+an executable shell script.  If processing of the file results in the
+function being re-defined, the function itself is not re-executed. To
+force the function to perform initialization and be called, the file
+should contain initialization code (which will be discarded) in addition
+to a complete function definition (which will be retained for subsequent
+calls to the function), and a call to the shell function at the end.
 
 For example, suppose the autoload file tt(func) contains
 
@@ -174,6 +211,10 @@ myfunc args...)
 
 In fact, the tt(functions) command outputs `tt(builtin autoload -X)' as
 the body of an autoloaded function.  This is done so that
+the body of an autoloaded function.  A true autoloaded function can be
+identified by the presence of the comment `tt(# undefined)' in the body,
+because all comments are discarded from defined functions.  This is done
+so that
 
 example(eval "$(functions)")
 
